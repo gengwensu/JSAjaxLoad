@@ -25,35 +25,32 @@ var observeDOM = (function () {
     };
 })();
 
-// Observe the DOM body for changes
-observeDOM(document.body, callWhenReadyToGo(alert('All images loaded!')));
-
 // Loop through all new images, add the event
 var callWhenReadyToGo = function (callback) {
     // check images loading only, change type if needed, data-loaded is just a flag to prevent multiple checks
     var media = document.querySelectorAll('img:not([data-loaded]');
     for (var i = 0; i < media.length; i++) {
-        addMediaLoadedEvent(media[i], callback);
+        // Fire the callback if complete, otherwise bind to onload
+        if (media[i].complete) {
+            onMediaLoaded(media[i], callback);
+        } else {
+            media[i].addEventListener('load', function (event) {
+                onMediaLoaded(event.target, callback);
+            });
+        }
     }
 }
 
-// Fire the callback if complete, otherwise bind to onload
-var addMediaLoadedEvent = function (element, callback) {
-    if (element.complete) {
-        onMediaLoaded(element, callback);
-    } else {
-        element.addEventListener('load', function (event) {
-            onMediaLoaded(event.target, callback);
-        });
-    }
-}
-
-// The callback that is fired once an element is loaded
+// callback will be fired once all images are loaded
 var onMediaLoaded = function (element, callback) {
     element.setAttribute('data-loaded', 'true');
 
-    // only fire when there are no media elements without the 'data-loaded' attribute left
+    // only fired when there are no images without the 'data-loaded' attribute left
     if (document.querySelectorAll('img:not([data-loaded])').length === 0) {
         callback(); // callback function fired
     }
 }
+
+// Observe the DOM body for changes, then fire callback when all images downloaded
+observeDOM(document.body, callWhenReadyToGo(alert('All images loaded!')));
+
